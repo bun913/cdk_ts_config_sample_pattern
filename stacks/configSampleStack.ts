@@ -5,7 +5,7 @@ import { Construct } from "constructs";
 import { ConfigParameters } from "../config";
 
 export class ConfigsSampleStack extends cdk.Stack {
-  readonly config : ConfigParameters;
+  readonly config: ConfigParameters;
 
   constructor(
     scope: Construct,

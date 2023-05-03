@@ -1,5 +1,6 @@
+// 特に機密情報とかを意識していないシンプルな実装パターン
 const arrayEnvironments = ["dev", "prd"] as const;
-export type Environment = (typeof arrayEnvironments)[number];
+type Environment = (typeof arrayEnvironments)[number];
 
 export type ConfigParameters = {
   VpcProp: {
@@ -7,33 +8,39 @@ export type ConfigParameters = {
   };
 };
 
-type Configs = {
-  [key in Environment]: ConfigParameters;
-};
+interface ISytemConfig {
+  getSystemConfig(): ConfigParameters;
+}
 
-const configs: Configs = {
-  dev: {
-    VpcProp: {
-      Cidr: "10.10.0.0/16",
-    },
-  },
-  prd: {
-    VpcProp: {
-      Cidr: "10.20.0.0/16",
-    },
-  },
-};
-
-export const validateEnvironment = (
-  environment: string | null | undefined
-): boolean => {
-  if (environment == null) {
-    return false;
+class DevConfig implements ISytemConfig {
+  getSystemConfig(): ConfigParameters {
+    return {
+      VpcProp: {
+        Cidr: "10.10.0.0/16",
+      },
+    };
   }
-  const environmentSet = new Set<string>(arrayEnvironments);
-  return environmentSet.has(environment);
-};
+}
 
-export const getConfigs = (env: Environment): ConfigParameters => {
-  return configs[env];
+class PrdConfig implements ISytemConfig {
+  getSystemConfig(): ConfigParameters {
+    return {
+      VpcProp: {
+        Cidr: "10.20.0.0/16",
+      },
+    };
+  }
+}
+
+const SystemMap = new Map<Environment, ISytemConfig>([
+  ["dev", new DevConfig()],
+  ["prd", new PrdConfig()],
+]);
+
+export const getSystemConfig = (env: Environment): ConfigParameters => {
+  const system = SystemMap.get(env);
+  if (system == null) {
+    throw new Error("Please specify like `cdk deploy -c env=dev``");
+  }
+  return system.getSystemConfig();
 };
